@@ -1,4 +1,4 @@
 pub struct Page {
-    pub value: u32,
-    pub offset: u32
+    pub value: u8,
+    pub offset: u8
 }
