@@ -19,8 +19,8 @@ jobs:
     - name: Build
       run: |
         cd ic
-        cargo build --verbose
+        cargo build --verbose --lib
     - name: Run tests
       run: |
         cd ic
-        cargo test --verbose
+        cargo test --verbose --lib
