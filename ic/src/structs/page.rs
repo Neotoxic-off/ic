@@ -1,4 +1,4 @@
-pub struct Page {
-    pub value: u8,
-    pub offset: u8
+pub struct Page<T> {
+    pub value: usize,
+    pub content: Vec<T>
 }

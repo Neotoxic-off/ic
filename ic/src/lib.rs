@@ -1,76 +1,59 @@
-mod io;
 mod structs;
-mod serializer;
 
-pub fn save(path: &str, table: structs::table::Table) -> std::io::Result<()> {
-    let serializer: serializer::Serializer = serializer::Serializer;
-    let serialized: Vec<u8> = serializer.serialize(table);
+use structs::page::Page;
+use structs::table::Table;
 
-    io::File::write(path, &serialized)
-}
+pub fn index<T>(content: &[T], page_size: usize) -> Table {
+    let mut current_page_value: usize = 0;
+    let mut content_buffer: Vec<usize> = Vec::new();
+    let mut table: Table = Table {
+        pages: Vec::new(),
+        page_size: page_size
+    };
 
-pub fn load(data: &[u8]) -> structs::table::Table {
-    let serializer: serializer::Serializer = serializer::Serializer;
+    for element in content {
+        content_buffer.push(&*element as *const T as usize);
 
-    serializer.deserialize(data)
-}
+        if content_buffer.len() == table.page_size {
+            table.pages.push(
+                Page {
+                    value: current_page_value,
+                    content: content_buffer.split_off(0)
+                }
+            );
+            current_page_value += 1;
+        }
+    }
 
-pub fn open(path: &str) -> structs::table::Table {
-    let serializer: serializer::Serializer = serializer::Serializer;
-    let raw: Vec<u8> = io::File::open(path).unwrap();
+    if !content_buffer.is_empty() {
+        table.pages.push(
+            Page {
+                value: current_page_value,
+                content: content_buffer
+            }
+        );
+    }
 
-    serializer.deserialize(&raw)
+    table
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    static OUTPUT: &str = "out.ic";
-
-    fn build_table() -> structs::table::Table {
-        let mut table: structs::table::Table = structs::table::Table {
-            pages: Vec::new()
-        };
-
-        for i in 0..10 {
-            table.pages.push(
-                structs::page::Page {
-                    value: i,
-                    offset: i + 10
-                }
-            );
+    
+    #[test]
+    fn index_u8_test() {
+        let content: Vec<u8> = vec![0; 100];
+        let table: Table = index(&content, 10);
+    
+        for page in &table.pages {
+            assert_eq!(page.content.len(), 10);
         }
 
-        table
-    }
-
-    #[test]
-    fn save_test() {
-        let table: structs::table::Table = build_table();
-        let _ = save(OUTPUT, table);
-
-        assert_eq!(io::File::exists(&OUTPUT.to_owned()), true);
-    }
-
-    #[test]
-    fn open_test() {
-        let _skip_table: structs::table::Table = build_table();
-        let _ = save(OUTPUT, _skip_table);
-
-        let table: structs::table::Table = open(OUTPUT);
-
         assert_eq!(table.pages.len(), 10);
-    }
 
-    #[test]
-    fn load_test() {
-        let _skip_table: structs::table::Table = build_table();
-        let _ = save(OUTPUT, _skip_table);
-    
-        let bytes: Vec<u8> = io::File::open(OUTPUT).unwrap();
-        let table: structs::table::Table = load(&bytes);
-
-        assert_eq!(table.pages.len(), 10);
+        for page in &table.pages {
+            assert_eq!(page.content.len(), 10);
+        }
     }
 }
