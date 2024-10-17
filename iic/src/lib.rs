@@ -55,17 +55,32 @@ mod tests {
     #[test]
     fn index_u8_test() {
         let content: Vec<u8> = vec![0; 100];
-        let table: Table= index(&content, 10);
+        let table: Table = index(&content, 10);
     
         for page in &table.pages {
             assert_eq!(page.content.len(), 10);
         }
 
         assert_eq!(table.pages.len(), 10);
+    }
 
-        for page in &table.pages {
-            assert_eq!(page.content.len(), 10);
-        }
+    #[test]
+    fn index_empty_content_test() {
+        let content: Vec<u8> = vec![];
+        let table: Table = index(&content, 10);
+        
+        assert_eq!(table.pages.len(), 0);
+    }
+
+    #[test]
+    fn index_non_exact_page_size_test() {
+        let content: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
+        let table: Table = index(&content, 4);
+    
+        assert_eq!(table.pages.len(), 2);
+
+        assert_eq!(table.pages[0].content.len(), 4);
+        assert_eq!(table.pages[1].content.len(), 2);
     }
 
     #[test]
@@ -84,5 +99,45 @@ mod tests {
         let address: usize = &content[0] as *const u8 as usize;
 
         assert_eq!(search(table, address).is_some(), true);
+    }
+
+    #[test]
+    fn index_large_content_test() {
+        let content: Vec<u8> = vec![1; 1000];
+        let table: Table = index(&content, 50);
+        
+        assert_eq!(table.pages.len(), 20);
+
+        for page in &table.pages {
+            assert_eq!(page.content.len(), 50);
+        }
+    }
+
+    #[test]
+    fn search_first_page_test() {
+        let content: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let table: Table = index(&content, 5);
+        let address: usize = &content[0] as *const u8 as usize;
+
+        assert_eq!(search(table, address).is_some(), true);
+    }
+
+    #[test]
+    fn search_last_page_test() {
+        let content: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let table: Table = index(&content, 5);
+        let address: usize = &content[9] as *const u8 as usize;
+
+        assert_eq!(search(table, address).is_some(), true);
+    }
+
+    #[test]
+    fn index_different_data_type_test() {
+        let content: Vec<i32> = vec![1, 2, 3, 4, 5];
+        let table: Table = index(&content, 2);
+
+        assert_eq!(table.pages.len(), 3);
+        assert_eq!(table.pages[0].content.len(), 2);
+        assert_eq!(table.pages[2].content.len(), 1);
     }
 }
