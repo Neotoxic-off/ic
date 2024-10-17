@@ -55,6 +55,9 @@ mod tests {
 
     #[test]
     fn open_test() {
+        let _skip_table: structs::table::Table = build_table();
+        let _ = save(OUTPUT, _skip_table);
+
         let table: structs::table::Table = open(OUTPUT);
 
         assert_eq!(table.pages.len(), 10);
@@ -62,6 +65,9 @@ mod tests {
 
     #[test]
     fn load_test() {
+        let _skip_table: structs::table::Table = build_table();
+        let _ = save(OUTPUT, _skip_table);
+    
         let bytes: Vec<u8> = io::File::open(OUTPUT).unwrap();
         let table: structs::table::Table = load(&bytes);
 
