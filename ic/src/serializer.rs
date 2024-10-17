@@ -1,5 +1,6 @@
 use crate::structs::table;
 use crate::structs::page;
+
 pub struct Serializer;
 
 impl Serializer {
